@@ -10,12 +10,16 @@
     "engines": {
         "node": "^6.2.0"
     },
+    "repository": {
+        "type": "git",
+        "url": "git@github.com:ZachE888/song-classifier.git"
+    },
     "author": "",
     "license": "Apache-2.0",
     "dependencies": {
+        "@tensorflow/tfjs-node": "^2.7.0",
         "axios": "^0.21.0",
-        "danfojs": "^0.1.2",
-        "tensorflow2": "^2.0.0"
+        "danfojs": "^0.1.2"
     },
     "devDependencies": {
         "babel-cli": "^6.26.0",
