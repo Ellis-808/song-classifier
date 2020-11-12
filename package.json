@@ -1,0 +1,27 @@
+{
+    "name": "song-classifier",
+    "version": "1.0.0",
+    "description": "Collect song data and classify",
+    "main": "index.js",
+    "scripts": {
+        "test": "mocha --compilers js:babel-register",
+        "build": "babel src -d dist --copy-files"
+    },
+    "engines": {
+        "node": "^6.2.0"
+    },
+    "author": "",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "axios": "^0.21.0",
+        "danfojs": "^0.1.2",
+        "tensorflow2": "^2.0.0"
+    },
+    "devDependencies": {
+        "babel-cli": "^6.26.0",
+        "babel-preset-es2015": "^6.24.1",
+        "babel-preset-stage-2": "^6.24.1",
+        "babel-register": "^6.26.0",
+        "mocha": "^3.2.0"
+    }
+}
