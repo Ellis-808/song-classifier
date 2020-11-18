@@ -2,10 +2,12 @@
     "name": "song-classifier",
     "version": "1.0.0",
     "description": "Collect song data and classify",
-    "main": "index.js",
+    "main": "src/index.js",
     "scripts": {
         "test": "mocha --compilers js:babel-register",
-        "build": "babel src -d dist --copy-files"
+        "start": "babel-node src/index.js",
+        "build": "babel src -d dist --copy-files",
+        "serve": "node dist/index.js"
     },
     "engines": {
         "node": "^6.2.0"
@@ -17,9 +19,9 @@
     "author": "",
     "license": "Apache-2.0",
     "dependencies": {
-        "@tensorflow/tfjs-node": "^2.7.0",
+        "@tensorflow/tfjs-node": "^1.2.7",
         "axios": "^0.21.0",
-        "danfojs": "^0.1.2"
+        "danfojs-node": "^0.1.5"
     },
     "devDependencies": {
         "babel-cli": "^6.26.0",
