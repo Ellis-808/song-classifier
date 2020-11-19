@@ -29,6 +29,7 @@ export class Classifier {
     /**
      * Classify a song
      * @param {DataFrame} songData Song data to predict against
+     * @returns {String} Song classification
      */
     predict(songData) {
 

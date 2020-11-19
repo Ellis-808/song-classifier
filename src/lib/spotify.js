@@ -28,7 +28,6 @@ export class Spotify {
             };
             Axios(request).then( response => {
                 this.accessToken = response.data.access_token;
-                console.log( "TOKEN:", this.accessToken);
                 resolve();
             }).catch( err => {
                 console.error(err);
@@ -39,9 +38,12 @@ export class Spotify {
 
     /**
      * Get top 100 songs audio data
-     * @param {String} [genre] Filter by genre
+     * @param {String} genre Genre to query
      */
-    getTop100AudioData(genre = 'holidays') {
+    getTop100AudioData(genre) {
+        if(typeof genre !== 'string')
+            throw new Error("parameter `genre` must be of type string");
+
         return new Promise( (resolve, reject) => {
             const request = {
                 method: 'GET',
