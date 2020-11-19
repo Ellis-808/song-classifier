@@ -19,9 +19,9 @@
     "author": "",
     "license": "Apache-2.0",
     "dependencies": {
-        "@tensorflow/tfjs-node": "^1.2.7",
+        "@tensorflow/tfjs": "^2.7.0",
         "axios": "^0.21.0",
-        "danfojs-node": "^0.1.5"
+        "pandas-js": "^0.2.4"
     },
     "devDependencies": {
         "babel-cli": "^6.26.0",
