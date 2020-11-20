@@ -1,5 +1,5 @@
 import Classifier from './lib/classifier';
-import Spotify from './lib/classifier';
+import Spotify from './lib/spotify';
 
 const spotify = new Spotify();
 const classifier = new Classifier();
