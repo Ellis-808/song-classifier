@@ -40,6 +40,24 @@ export class Spotify {
      * Get top 100 songs from specified genre playlist.
      * 
      * NOTE-> Only retrieves the first playlist of the queried genre.
+     * Supported params: 
+     *  'toplists',         'hiphop',     'pop',
+     *   'country',          'workout',    'rock',
+     *   'latin',            'holidays',   'mood',
+     *   'rnb',              'gaming',     'shows_with_music',
+     *   'focus',            'edm_dance',  'blackhistorymonth',
+     *   'chill',            'at_home',    'indie_alt',
+     *   'inspirational',    'decades',    'instrumental',
+     *   'alternative',      'wellness',   'in_the_car',
+     *   'pride',            'party',      'sleep',
+     *   'classical',        'jazz',       'roots',
+     *   'soul',             'sessions',   'dinner',
+     *   'romance',          'kpop',       'punk',
+     *   'regional_mexican', 'popculture', 'blues',
+     *   'arab',             'desi',       'radar',
+     *   'anime',            'thirdparty', 'afro',
+     *   'comedy',           'metal',      'caribbean',
+     *   'sports',           'funk'
      * @param {String} genre Genre to query
      */
     getTop100AudioData(genre) {
