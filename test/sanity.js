@@ -27,8 +27,8 @@ describe('song-classifier', function() {
     // });
     
     it('get_top_100_spotify', done => {
-        spotify.getTop100AudioData().then( data => {
-            console.log("Top 100 data: ", data);
+        spotify.getTop100AudioData('holidays').then( data => {
+            console.log("Top 100 data (1st entry): ", data[Object.keys(data)[0]]);
             done();
         }).catch( err => {
             done(err);

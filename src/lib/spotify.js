@@ -37,24 +37,52 @@ export class Spotify {
     }
 
     /**
-     * Get top 100 songs audio data
+     * Get top 100 songs from specified genre playlist.
+     * 
+     * NOTE-> Only retrieves the first playlist of the queried genre.
      * @param {String} genre Genre to query
      */
     getTop100AudioData(genre) {
         if(typeof genre !== 'string')
             throw new Error("parameter `genre` must be of type string");
 
+        const songData = {};
         return new Promise( (resolve, reject) => {
-            const request = {
+            const playlistRequest = {
                 method: 'GET',
                 headers: { Authorization: `Bearer ${this.accessToken}` },
                 url: `https://api.spotify.com/v1/browse/categories/${genre}/playlists`
             };
-            return Axios(request).then( response => {
-                console.log( ...response.data.items );
-                resolve(response.data);
+            return Axios(playlistRequest).then( response => {
+                const tracklistRequest = {
+                    method: 'GET',
+                    headers: { Authorization: `Bearer ${this.accessToken}` },
+                    url: response.data.playlists.items[0].tracks.href
+                };
+                return Axios(tracklistRequest);
+            }).then( response => {
+                let featureUrl = "https://api.spotify.com/v1/audio-features/?ids=";
+                response.data.items.forEach( trackItem => {
+                    featureUrl += trackItem.track.id + ',';
+                    songData[trackItem.track.id] = {
+                        name: trackItem.track.name,
+                        popularity: trackItem.track.popularity
+                    };
+                });
+
+                const request = {
+                    method: 'GET',
+                    headers: { Authorization: `Bearer ${this.accessToken}` },
+                    url: featureUrl.slice(0, -1)
+                };
+                return Axios(request);
+            }).then( response => {
+                response.data.audio_features.forEach( song => {
+                    songData[song.id].features = song;
+                });
+                resolve(songData);
             }).catch( err => {
-                console.error("ERROR:", err);
+                console.error("error collecting top 100 songs of genre playlist:", err);
                 reject(err);
             });
         });
