@@ -1,6 +1,12 @@
 import Axios from 'axios';
 
 /**
+ * Delay execution (ms)
+ * @param {Number} delay Time in ms
+ */
+const sleep = (delay) => new Promise( resolve => setTimeout(resolve(), delay) );
+
+/**
  * Spotify API interface
  */
 export class Spotify {
@@ -40,14 +46,20 @@ export class Spotify {
      * @typedef {Object} SongData 100 songs, keyed by spotify track ID
      * @property {String} name Song name
      * @property {Number} popularity Song popularity according to spotify (out of 100)
-     * @property {Object} features Audio features
+     * @property {Object} features Audio features (High level)
+     * @property {Object} analysis Audio analysis (Low level)
      */
+
     /**
      * Get top 100 songs from specified genre playlist.
      * 
+     * @see {@link https://developer.spotify.com/documentation/web-api/reference/tracks/get-audio-features/ High Level Audio Data} schema
+     * @see {@link https://developer.spotify.com/documentation/web-api/reference/tracks/get-audio-analysis/ Low Level Audio Data} schema
+     * 
      * NOTE-> Only retrieves the first playlist of the queried genre.
+     * NOTE-> Rate limiting affects audio analysis (Low Level) data collection.
      * Supported params: 
-     *  'toplists',         'hiphop',     'pop',
+     *   'toplists',         'hiphop',     'pop',
      *   'country',          'workout',    'rock',
      *   'latin',            'holidays',   'mood',
      *   'rnb',              'gaming',     'shows_with_music',
@@ -95,17 +107,80 @@ export class Spotify {
                     };
                 });
 
-                const request = {
+                const featuresRequest = {
                     method: 'GET',
                     headers: { Authorization: `Bearer ${this.accessToken}` },
                     url: featureUrl.slice(0, -1)
                 };
-                return Axios(request);
+                return Axios(featuresRequest);
             }).then( response => {
+                let promises = [];
                 response.data.audio_features.forEach( song => {
                     songData[song.id].features = song;
+                    const analysisRequest = {
+                        method: 'GET',
+                        headers: { Authorization: `Bearer ${this.accessToken}` },
+                        url: song.analysis_url
+                    };
+                    promises.push( Axios(analysisRequest).catch( err => {
+                        return {
+                            status: err.response.status,
+                            url: err.config.url,
+                            timeout: err.response.headers['retry-after'] ? parseInt(err.response.headers['retry-after']) : NaN
+                        };
+                    }));
                 });
-                resolve(songData);
+                
+                return Promise.all(promises);
+            }).then( songs => {
+                let errors = [];
+                songs.forEach( song => {
+                    if(song.status !== 200)
+                        errors.push(song);
+                    else {
+                        const id = song.request.path.split('/')[3];
+                        songData[id].analysis = song.data;
+                    }
+                });
+
+                if(errors.length > 0) {
+                    let timeout = 0;
+                    let promises = [];
+
+                    for(let i = 0; i < errors.length; i++) {
+                        if(errors[i].status === 429) {
+                            timeout = (errors[i].timeout + 2) * 1000;
+                            break;
+                        }
+                    }
+
+                    // One retry attempt for audio analysis data.
+                    resolve( sleep(timeout).then( () => {
+                        errors.forEach( error => {
+                            const retry = {
+                                method: 'GET',
+                                headers: { Authorization: `Bearer ${this.accessToken}` },
+                                url: error.url
+                            };
+                            promises.push( Axios(retry).catch( err => {return {}}) );
+                        });
+
+                        return Promise.all(promises).then( retries => {
+                            let i = 0;
+                            retries.forEach( song => {
+                                if( (song.status || '') === 200 ) {
+                                    const id = song.request.path.split('/')[3];
+                                    songData[id].analysis = song.data;
+                                }
+                                else i++;
+                            });
+                            console.error(`# of songs that audio analysis (Low Level) data could no be retrieved: ${i}`);
+                            return songData;
+                        });
+                    }) );
+                } else {
+                    resolve(songData);
+                }
             }).catch( err => {
                 console.error("error collecting top 100 songs of genre playlist:", err);
                 reject(err);

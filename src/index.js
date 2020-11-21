@@ -47,7 +47,6 @@ exports.predict = (songData) => {
 exports.collectTop100 = (genre = 'holidays') => {
     return new Promise( (resolve, reject) => {
         spotify.getTop100AudioData(genre).then( data => {
-            // do something maybe
             resolve(data);
         }).catch( err => {
             console.error(err);
