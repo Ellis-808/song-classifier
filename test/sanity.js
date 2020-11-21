@@ -28,8 +28,9 @@ describe('song-classifier', function() {
     // });
     
     it('get_top_100_spotify', done => {
-        spotify.getTop100AudioData('holidays').then( data => {
-            fs.writeFileSync('./data/holidays.json', JSON.stringify(data, null, 4));
+        const genre = 'holidays';
+        spotify.getTop100AudioData(genre).then( data => {
+            fs.writeFileSync(`./data/${genre}.json`, JSON.stringify(data, null, 4));
             done();
         }).catch( err => {
             done(err);

@@ -7,6 +7,28 @@ import Axios from 'axios';
 const sleep = (delay) => new Promise( resolve => setTimeout(resolve(), delay) );
 
 /**
+ * Remove unnecessary data from a song analysis object (Low Level)
+ * @param {Object} songData Song to trim
+ * @returns {Object} Trimmed song object
+ */
+const trimSongData = (songData) => {
+    delete songData.meta;
+    delete songData.track.duration;
+    delete songData.track.sample_md5;
+    delete songData.track.loudness;
+    delete songData.track.codestring;
+    delete songData.track.code_version;
+    delete songData.track.echoprintstring;
+    delete songData.track.echoprint_version;
+    delete songData.track.synchstring;
+    delete songData.track.synch_version;
+    delete songData.track.rhythmstring;
+    delete songData.track.rhythm_version;
+
+    return songData;
+}
+
+/**
  * Spotify API interface
  */
 export class Spotify {
@@ -51,13 +73,13 @@ export class Spotify {
      */
 
     /**
-     * Get top 100 songs from specified genre playlist.
+     * Get up to the top 100 songs from the specified genre playlist.
      * 
      * @see {@link https://developer.spotify.com/documentation/web-api/reference/tracks/get-audio-features/ High Level Audio Data} schema
      * @see {@link https://developer.spotify.com/documentation/web-api/reference/tracks/get-audio-analysis/ Low Level Audio Data} schema
      * 
      * NOTE-> Only retrieves the first playlist of the queried genre.
-     * NOTE-> Rate limiting affects audio analysis (Low Level) data collection.
+     * NOTE-> Rate limiting negatively affects audio analysis (Low Level) data collection.
      * Supported params: 
      *   'toplists',         'hiphop',     'pop',
      *   'country',          'workout',    'rock',
@@ -116,13 +138,17 @@ export class Spotify {
             }).then( response => {
                 let promises = [];
                 response.data.audio_features.forEach( song => {
+                    delete song.type;
+                    delete song.uri;
+                    delete song.track_href;
                     songData[song.id].features = song;
+
                     const analysisRequest = {
                         method: 'GET',
                         headers: { Authorization: `Bearer ${this.accessToken}` },
                         url: song.analysis_url
                     };
-                    promises.push( Axios(analysisRequest).catch( err => {
+                    promises.push(Axios(analysisRequest).catch( err => {
                         return {
                             status: err.response.status,
                             url: err.config.url,
@@ -139,7 +165,7 @@ export class Spotify {
                         errors.push(song);
                     else {
                         const id = song.request.path.split('/')[3];
-                        songData[id].analysis = song.data;
+                        songData[id].analysis = trimSongData(song.data);
                     }
                 });
 
@@ -170,11 +196,13 @@ export class Spotify {
                             retries.forEach( song => {
                                 if( (song.status || '') === 200 ) {
                                     const id = song.request.path.split('/')[3];
-                                    songData[id].analysis = song.data;
+                                    songData[id].analysis = trimSongData(song.data);
                                 }
                                 else i++;
                             });
-                            console.error(`# of songs that audio analysis (Low Level) data could no be retrieved: ${i}`);
+
+                            if( i > 0 )
+                                console.error(`${i} song(s) audio analysis (Low Level) data could not be retrieved`);
                             return songData;
                         });
                     }) );
