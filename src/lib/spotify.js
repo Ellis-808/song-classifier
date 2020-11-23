@@ -156,7 +156,7 @@ export class Spotify {
                         };
                     }));
                 });
-                
+
                 return Promise.all(promises);
             }).then( songs => {
                 let errors = [];
@@ -175,7 +175,7 @@ export class Spotify {
 
                     for(let i = 0; i < errors.length; i++) {
                         if(errors[i].status === 429) {
-                            timeout = (errors[i].timeout + 2) * 1000;
+                            timeout = (errors[i].timeout * 1000) + 2;
                             break;
                         }
                     }
