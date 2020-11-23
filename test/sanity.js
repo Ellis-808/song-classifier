@@ -30,8 +30,11 @@ describe('song-classifier', function() {
     // });
     
     it('get_top_100_spotify', done => {
-        const genre = 'holidays';
+        const genre = 'caribbean';
         spotify.getTop100AudioData(genre).then( data => {
+            if (!fs.existsSync('./data/')){
+                fs.mkdirSync('./data/');
+            }
             fs.writeFileSync(`./data/${genre}.json`, JSON.stringify(data, null, 4));
             done();
         }).catch( err => {
