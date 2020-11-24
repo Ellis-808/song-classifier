@@ -9,7 +9,14 @@ import {
  */
 export class Classifier {
     constructor() {
-        this.model;
+        this.model = tf.sequential();
+        // this.model.add(tf.layers.lstm({ units: 18, inputShape: [611, 12] }));
+        // this.model.add(tf.layers.lstm({ units: 18 }));
+        // this.model.add(tf.layers.dense({ units: 18, activation: 'relu' }));
+        // this.model.add(tf.layers.dense({ units: 9, activation: 'softmax' }));
+        this.model.add(tf.layers.dense({ units: 18, inputShape: [12], activation: 'relu' }));
+        this.model.add(tf.layers.dense({ units: 9, activation: 'softmax' }));
+        this.model.compile({ optimizer: 'adam', loss: 'sparseCategoricalCrossentropy', metrics: 'accuracy' });
     }
 
     /**
@@ -17,8 +24,13 @@ export class Classifier {
      * @param {DataFrame} X Preproccessed song data
      * @param {DataFrame} Y Preprocessed song classifications
      */
-    fit(X, Y) {
-
+    fit(X, Y, epochs = 5) {
+        const X_Tensor = X.to_json({ orient: 'values' });
+        const Y_Tensor = Y.to_json({ orient: 'values' }).flat();
+        // console.log(X_Tensor);
+        // return this.model.fit(X_Tensor, Y_Tensor, {epochs: epochs}).then( () => {
+        //     return;
+        // });
     }
 
     /**

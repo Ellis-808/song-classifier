@@ -1,7 +1,9 @@
+import { concat } from 'pandas-js';
 import Classifier from '../src/lib/classifier';
 import Spotify from '../src/lib/spotify'
 
 import {
+    labelEncoder,
     preprocess,
     trainTestSplit
 } from '../src/lib/util';
@@ -70,7 +72,7 @@ describe('song-classifier', function() {
         });
     });
 
-    it('fit_data', (done) => {
+    xit('fit_data', (done) => {
         const data = JSON.parse(fs.readFileSync('./data/chill.json'));
         const df = preprocess(data);
         const trainTest = trainTestSplit(df);
@@ -78,5 +80,51 @@ describe('song-classifier', function() {
         console.log("X_Train\n", trainTest.X_Train.toString());
         console.log("X_Test\n", trainTest.X_Test.toString());
         done();
+    });
+
+    // Modify to include/exclude genres you want to train on
+    it('create_dataset', (done) => {
+        const country = JSON.parse(fs.readFileSync('./data/country.json'));
+        const edm_dance = JSON.parse(fs.readFileSync('./data/edm_dance.json'));
+        const hiphop = JSON.parse(fs.readFileSync('./data/hiphop.json'));
+        const holidays = JSON.parse(fs.readFileSync('./data/holidays.json'));
+        const jazz = JSON.parse(fs.readFileSync('./data/jazz.json'));
+        const metal = JSON.parse(fs.readFileSync('./data/metal.json'));
+        const pop = JSON.parse(fs.readFileSync('./data/pop.json'));
+        const rnb = JSON.parse(fs.readFileSync('./data/rnb.json'));
+        const rock = JSON.parse(fs.readFileSync('./data/rock.json'));
+
+        // See the number of songs for each genre
+        // console.log(Object.keys(country).length);
+        // console.log(Object.keys(edm_dance).length);
+        // console.log(Object.keys(hiphop).length);
+        // console.log(Object.keys(holidays).length);
+        // console.log(Object.keys(jazz).length);
+        // console.log(Object.keys(metal).length);
+        // console.log(Object.keys(pop).length);
+        // console.log(Object.keys(rnb).length);
+        // console.log(Object.keys(rock).length);
+
+        // shuffle later to randomize for training purposes
+        const country_df = preprocess(country);
+        const edm_dance_df = preprocess(edm_dance);
+        const hiphop_df = preprocess(hiphop);
+        const holidays_df = preprocess(holidays);
+        const jazz_df = preprocess(jazz);
+        const metal_df = preprocess(metal);
+        const pop_df = preprocess(pop);
+        const rnb_df = preprocess(rnb);
+        const rock_df = preprocess(rock);
+
+        const data = concat([country_df, edm_dance_df, hiphop_df, holidays_df, jazz_df, metal_df, pop_df, rnb_df, rock_df]);
+        const { X_Train, X_Test, Y_Train, Y_Test } = trainTestSplit(data);
+        const Y_Train_Encoded = labelEncoder(Y_Train);
+        const Y_Test_Encoded = labelEncoder(Y_Test);
+
+        classifier.fit(X_Train, Y_Train_Encoded).then( () => {
+            done();
+        }).catch( err => {
+            done(err);
+        });
     });
 });

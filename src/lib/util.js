@@ -16,8 +16,8 @@ const randomInt = (max) => Math.floor(Math.random() * Math.floor(max));
  * @param {DataFrame} df Pandas DataFrame of labels to encode
  * @returns {DataFrame} Encoded labels
  */
-export function labelEncoding(df) {
-    const data = df.to_json({orient: 'values'}).flat();
+export function labelEncoder(df) {
+    const data = df.to_json({ orient: 'values' }).flat();
     const labels = [];
     const encodings = {};
     const encodedData = [];
@@ -32,7 +32,7 @@ export function labelEncoding(df) {
     }
 
     data.forEach( label => {
-        encodedData.push({genre: encodings[label] });
+        encodedData.push({ genre: encodings[label] });
     });
 
     return new DataFrame(encodedData);
@@ -101,9 +101,9 @@ export function trainTestSplit(df, testSize = 0) {
     let testSet = [];
     for(const [row,idx] of df.iterrows()) {
         if(numbers.includes(idx))
-            testSet.push(df.iloc(idx).to_json({orient: 'records'}));
+            testSet.push(df.iloc(idx).to_json({ orient: 'records' }));
         else
-            trainSet.push(df.iloc(idx).to_json({orient: 'records'}));
+            trainSet.push(df.iloc(idx).to_json({ orient: 'records' }));
     }
     trainSet = trainSet.flat();
     testSet = testSet.flat();
