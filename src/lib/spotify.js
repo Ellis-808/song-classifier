@@ -68,6 +68,7 @@ export class Spotify {
      * @typedef {Object} SongData 100 songs, keyed by spotify track ID
      * @property {String} name Song name
      * @property {Number} popularity Song popularity according to spotify (out of 100)
+     * @property {String} genre Song genre
      * @property {Object} features Audio features (High level)
      * @property {Object} analysis Audio analysis (Low level)
      */
@@ -99,6 +100,7 @@ export class Spotify {
      *   'comedy',           'metal',      'caribbean',
      *   'sports',           'funk'
      * @param {String} genre Genre to query
+     * @param {Boolean} [lowLevelData=false] If SongData should include analysis object (Low Level)
      * @returns {SongData} Top 100 songs audio data
      */
     getTop100AudioData(genre, lowLevelData = false) {
