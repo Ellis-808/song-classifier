@@ -12,6 +12,33 @@ const randomInt = (max) => Math.floor(Math.random() * Math.floor(max));
 
 
 /**
+ * Encode data labels to integers for classifier.
+ * @param {DataFrame} df Pandas DataFrame of labels to encode
+ * @returns {DataFrame} Encoded labels
+ */
+export function labelEncoding(df) {
+    const data = df.to_json({orient: 'values'}).flat();
+    const labels = [];
+    const encodings = {};
+    const encodedData = [];
+
+    data.forEach( label => {
+        if(! labels.includes(label))
+            labels.push(label);
+    });
+
+    for(let i = 0; i < labels.length; i++) {
+        encodings[labels[i]] = i;
+    }
+
+    data.forEach( label => {
+        encodedData.push({genre: encodings[label] });
+    });
+
+    return new DataFrame(encodedData);
+}
+
+/**
  * Process song data collected from Spotify and place into a Pandas DataFrame
  * @param {Object} songData JSON object containing spotify data
  * @returns {DataFrame} DataFrame containing spotify song features
