@@ -101,9 +101,11 @@ export class Spotify {
      * @param {String} genre Genre to query
      * @returns {SongData} Top 100 songs audio data
      */
-    getTop100AudioData(genre) {
+    getTop100AudioData(genre, lowLevelData = false) {
         if(typeof genre !== 'string')
             throw new Error("parameter `genre` must be of type string");
+        if(typeof lowLevelData !== 'boolean')
+            throw new Error("parameter `lowLevelData` must be of type boolean");
 
         const songData = {};
         return new Promise( (resolve, reject) => {
@@ -125,6 +127,7 @@ export class Spotify {
                     featureUrl += trackItem.track.id + ',';
                     songData[trackItem.track.id] = {
                         name: trackItem.track.name,
+                        genre: genre,
                         popularity: trackItem.track.popularity
                     };
                 });
@@ -142,19 +145,21 @@ export class Spotify {
                     delete song.uri;
                     delete song.track_href;
                     songData[song.id].features = song;
-
-                    const analysisRequest = {
-                        method: 'GET',
-                        headers: { Authorization: `Bearer ${this.accessToken}` },
-                        url: song.analysis_url
-                    };
-                    promises.push(Axios(analysisRequest).catch( err => {
-                        return {
-                            status: err.response.status,
-                            url: err.config.url,
-                            timeout: err.response.headers['retry-after'] ? parseInt(err.response.headers['retry-after']) : NaN
+                    
+                    if(lowLevelData) {
+                        const analysisRequest = {
+                            method: 'GET',
+                            headers: { Authorization: `Bearer ${this.accessToken}` },
+                            url: song.analysis_url
                         };
-                    }));
+                        promises.push(Axios(analysisRequest).catch( err => {
+                            return {
+                                status: err.response.status,
+                                url: err.config.url,
+                                timeout: err.response.headers['retry-after'] ? parseInt(err.response.headers['retry-after']) : NaN
+                            };
+                        }));
+                    }
                 });
 
                 return Promise.all(promises);
