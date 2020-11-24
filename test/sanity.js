@@ -1,4 +1,5 @@
 import { concat } from 'pandas-js';
+import * as tf from '@tensorflow/tfjs';
 import Classifier from '../src/lib/classifier';
 import Spotify from '../src/lib/spotify'
 
@@ -10,7 +11,7 @@ import {
 
 const fs = require('fs');
 const spotify = new Spotify();
-const classifier = new Classifier();
+const classifier = new Classifier("sequential");
 
 const sleep = (delay) => new Promise( resolve => setTimeout(resolve(), delay) );
 
@@ -118,10 +119,23 @@ describe('song-classifier', function() {
 
         const data = concat([country_df, edm_dance_df, hiphop_df, holidays_df, jazz_df, metal_df, pop_df, rnb_df, rock_df]);
         const { X_Train, X_Test, Y_Train, Y_Test } = trainTestSplit(data);
+
         const Y_Train_Encoded = labelEncoder(Y_Train);
         const Y_Test_Encoded = labelEncoder(Y_Test);
+        console.log( Y_Test_Encoded.length );
+        // this.model.add(tf.layers.lstm({ units: 18, inputShape: [611, 12] }));
+        // this.model.add(tf.layers.lstm({ units: 18 }));
 
+        const layers = [tf.layers.dense({ units: 18, inputShape: [12], activation: 'relu' }), tf.layers.dense({ units: 9, activation: 'softmax' })];
+        classifier.addLayers(layers);
+        classifier.compile('adam', 'sparseCategoricalCrossentropy', 'accuracy');
+        // this.model.add(tf.layers.dense({ units: 18, inputShape: [12], activation: 'relu' }));
+        // this.model.add(tf.layers.dense({ units: 9, activation: 'softmax' }));
+        // this.model.compile({ optimizer: 'adam', loss: 'sparseCategoricalCrossentropy', metrics: 'accuracy' });
         classifier.fit(X_Train, Y_Train_Encoded).then( () => {
+            const prediction = classifier.predict(X_Test);
+            const allPredictions =  prediction.arraySync().map( row => Math.max.apply(Math, row) );
+            console.log(prediction.arraySync().indexOf(Math.max(...prediction.arraySync())));
             done();
         }).catch( err => {
             done(err);
