@@ -45,16 +45,18 @@ export function preprocess(songData) {
  * Split data into training and testing sets, with both sets being split further
  * into X: features and Y: labels.
  * @param {DataFrame} df Pandas DataFrame containing song data
- * @param {Number} testSize Test size
+ * @param {Number} [testSize=0] Test size: Defaults to 30% of the song count
  * @returns {TrainTestData} Split song data
  */
-export function trainTestSplit(df, testSize) {
+export function trainTestSplit(df, testSize = 0) {
     if(! (df instanceof DataFrame))
         throw new Error("parameter `df` must be an instance of a Pandas DataFrame");
     if(typeof testSize !== 'number')
         throw new Error("parameter `testSize` must be an integer");
 
     const songCount = df.length;
+    if(testSize === 0)
+        testSize = Math.floor(songCount * 0.3);
     if(songCount <= testSize)
         throw new Error("testSize must not exceed the provided DataFrame's index count");
 

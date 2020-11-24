@@ -73,7 +73,7 @@ describe('song-classifier', function() {
     it('fit_data', (done) => {
         const data = JSON.parse(fs.readFileSync('./data/chill.json'));
         const df = preprocess(data);
-        const trainTest = trainTestSplit(df, 20);
+        const trainTest = trainTestSplit(df);
 
         console.log("X_Train\n", trainTest.X_Train.toString());
         console.log("X_Test\n", trainTest.X_Test.toString());
