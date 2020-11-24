@@ -9,12 +9,7 @@ import {
  */
 export class Classifier {
     constructor() {
-    }
-
-    // pls delete
-    mcTest() {
-        let df1 = new DataFrame([{A: 1, B: 2}, {A: 3, B: 4}]);
-        console.log( df1.toString() );
+        this.model;
     }
 
     /**
