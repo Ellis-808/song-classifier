@@ -1,9 +1,9 @@
-import { concat } from 'pandas-js';
 import * as tf from '@tensorflow/tfjs';
 import Classifier from '../src/lib/classifier';
 import Spotify from '../src/lib/spotify'
 
 import {
+    JsonToDataFrame,
     labelEncoder,
     preprocess,
     trainTestSplit
@@ -73,9 +73,9 @@ describe('song-classifier', function() {
         });
     });
 
-    xit('fit_data', (done) => {
+    xit('pre_process_data', (done) => {
         const data = JSON.parse(fs.readFileSync('./data/chill.json'));
-        const df = preprocess(data);
+        const df = JsonToDataFrame(data);
         const trainTest = trainTestSplit(df);
 
         console.log("X_Train\n", trainTest.X_Train.toString());
@@ -84,7 +84,7 @@ describe('song-classifier', function() {
     });
 
     // Modify to include/exclude genres you want to train on
-    it('create_dataset', (done) => {
+    it('full_demonstration', (done) => {
         const country = JSON.parse(fs.readFileSync('./data/country.json'));
         const edm_dance = JSON.parse(fs.readFileSync('./data/edm_dance.json'));
         const hiphop = JSON.parse(fs.readFileSync('./data/hiphop.json'));
@@ -107,18 +107,18 @@ describe('song-classifier', function() {
         console.log("Rock songs:", Object.keys(rock).length);
 
         // shuffle later to randomize for training purposes
-        const country_df = preprocess(country);
-        const edm_dance_df = preprocess(edm_dance);
-        const hiphop_df = preprocess(hiphop);
-        const holidays_df = preprocess(holidays);
-        const jazz_df = preprocess(jazz);
-        const metal_df = preprocess(metal);
-        const pop_df = preprocess(pop);
-        const rnb_df = preprocess(rnb);
-        const rock_df = preprocess(rock);
+        const country_df = JsonToDataFrame(country);
+        const edm_dance_df = JsonToDataFrame(edm_dance);
+        const hiphop_df = JsonToDataFrame(hiphop);
+        const holidays_df = JsonToDataFrame(holidays);
+        const jazz_df = JsonToDataFrame(jazz);
+        const metal_df = JsonToDataFrame(metal);
+        const pop_df = JsonToDataFrame(pop);
+        const rnb_df = JsonToDataFrame(rnb);
+        const rock_df = JsonToDataFrame(rock);
 
-        const data = concat([country_df, edm_dance_df, hiphop_df, holidays_df, jazz_df, metal_df, pop_df, rnb_df, rock_df]);
-        console.log("Total songs:", data.length);
+        const data = preprocess([country_df, edm_dance_df, hiphop_df, holidays_df, jazz_df, metal_df, pop_df, rnb_df, rock_df])
+        console.log("Total songs after evening out songs per genre:", data.length);
 
         const { X_Train, X_Test, Y_Train, Y_Test } = trainTestSplit(data);
         const { encodedData: Y_Train_Encoded, encodings } = labelEncoder(Y_Train);
