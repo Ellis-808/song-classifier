@@ -1,5 +1,4 @@
 import * as tf from '@tensorflow/tfjs';
-import { op } from '@tensorflow/tfjs';
 import {
     Series,
     DataFrame
@@ -77,10 +76,33 @@ export class Classifier {
      * @returns {Promise<void>} Completed operation
      */
     fit(X, Y, opts = { epochs: 5, batchSize: 32, shuffle: true }) {
+        if(! X instanceof DataFrame)
+            throw new Error("parameter `X` must be a Pandas DataFrame");
+        if(! Y instanceof DataFrame)
+            throw new Error("parameter `Y` must be a Pandas DataFrame");
+        if(typeof opts !== 'object')
+            throw new Error("parameter `opts` must be an object");
+
+        if(typeof opts.epochs === 'undefined')
+            opts.epochs = 5;
+        if(typeof opts.batchSize === 'undefined')
+            opts.batchSize = 32;
+        if(typeof opts.shuffle === 'undefined')
+            opts.shuffle = true;
+
+        if(typeof opts.epochs !== 'number')
+            throw new Error("parameter `opts.epochs` must be an integer");
+        if(typeof opts.batchSize !== 'number')
+            throw new Error("parameter `opts.batchSize` must be an integer");
+        if(typeof opts.shuffle !== 'boolean')
+            throw new Error("parameter `opts.shuffle` must be a boolean");
+
         const X_Tensor = tf.tensor( X.to_json({ orient: 'values' }) );
         const Y_Tensor = tf.tensor( Y.to_json({ orient: 'values' }).flat() );
 
-        return this.model.fit(X_Tensor, Y_Tensor, {epochs: opts.epochs}).then( () => {
+        return this.model.fit(X_Tensor, Y_Tensor,
+            {epochs: opts.epochs, batchSize: opts.batchSize, shuffle: opts.shuffle})
+        .then( () => {
             return;
         });
     }

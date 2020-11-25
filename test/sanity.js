@@ -122,20 +122,19 @@ describe('song-classifier', function() {
 
         const Y_Train_Encoded = labelEncoder(Y_Train);
         const Y_Test_Encoded = labelEncoder(Y_Test);
-        console.log( Y_Test_Encoded.length );
-        // this.model.add(tf.layers.lstm({ units: 18, inputShape: [611, 12] }));
-        // this.model.add(tf.layers.lstm({ units: 18 }));
+
+        // tf.layers.lstm({ units: 18, inputShape: [611, 12] });
+        // tf.layers.lstm({ units: 18 });
+        // tf.layers.dense({ units: 18, inputShape: [12], activation: 'relu' });
+        // tf.layers.dense({ units: 9, activation: 'softmax' });
 
         const layers = [tf.layers.dense({ units: 18, inputShape: [12], activation: 'relu' }), tf.layers.dense({ units: 9, activation: 'softmax' })];
         classifier.addLayers(layers);
         classifier.compile('adam', 'sparseCategoricalCrossentropy', 'accuracy');
-        // this.model.add(tf.layers.dense({ units: 18, inputShape: [12], activation: 'relu' }));
-        // this.model.add(tf.layers.dense({ units: 9, activation: 'softmax' }));
-        // this.model.compile({ optimizer: 'adam', loss: 'sparseCategoricalCrossentropy', metrics: 'accuracy' });
         classifier.fit(X_Train, Y_Train_Encoded).then( () => {
             const prediction = classifier.predict(X_Test);
             const allPredictions =  prediction.arraySync().map( row => Math.max.apply(Math, row) );
-            console.log(prediction.arraySync().indexOf(Math.max(...prediction.arraySync())));
+            // console.log(prediction.arraySync().indexOf(Math.max(...prediction.arraySync())));
             done();
         }).catch( err => {
             done(err);
