@@ -1,4 +1,5 @@
 import {
+    concat,
     Series,
     DataFrame
 } from 'pandas-js';
@@ -10,6 +11,29 @@ import {
  */
 const randomInt = (max) => Math.floor(Math.random() * Math.floor(max));
 
+/* ------------------------------------ Exported Functions ------------------------------------- */
+
+/**
+ * Process song data collected from Spotify and place into a Pandas DataFrame
+ * @param {Object} songData JSON object containing spotify data
+ * @returns {DataFrame} DataFrame containing spotify song features
+ */
+export function JsonToDataFrame(songData) {
+    const songIndicies = Object.keys(songData);
+    const data = [];
+
+    songIndicies.forEach( index => {
+        const features = songData[index].features
+        delete features.id;
+        delete features.analysis_url;
+        delete features.duration_ms;
+
+        features.genre = songData[index].genre;
+        data.push(features);
+    });
+
+    return new DataFrame(data);
+}
 
 /**
  * Encode data labels to integers for classifier.
@@ -42,25 +66,26 @@ export function labelEncoder(df) {
 }
 
 /**
- * Process song data collected from Spotify and place into a Pandas DataFrame
- * @param {Object} songData JSON object containing spotify data
- * @returns {DataFrame} DataFrame containing spotify song features
+ * Process song data in preparation for model fitting
+ * @param {DataFrame} dfs Song data to process
+ * @returns {DataFrame} Processed song data
  */
-export function preprocess(songData) {
-    const songIndicies = Object.keys(songData);
+export function preprocess(dfs) {
+    if(! Array.isArray(dfs) && ! dfs.every( df => df instanceof DataFrame ))
+        throw new Error("parameter `dfs` must be an array of Pandas DataFrames");
+
     const data = [];
+    let min = Number.MAX_SAFE_INTEGER;
 
-    songIndicies.forEach( index => {
-        const features = songData[index].features
-        delete features.id;
-        delete features.analysis_url;
-        delete features.duration_ms;
-
-        features.genre = songData[index].genre;
-        data.push(features);
+    dfs.forEach( df => min = df.length < min ? df.length : min );
+    dfs.forEach( df => {
+        if(df.length > min)
+            data.push(df.iloc([0, min]));
+        else
+            data.push(df);
     });
 
-    return new DataFrame(data);
+    return concat(data);
 }
 
 /**
