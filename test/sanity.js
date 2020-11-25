@@ -96,15 +96,15 @@ describe('song-classifier', function() {
         const rock = JSON.parse(fs.readFileSync('./data/rock.json'));
 
         // See the number of songs for each genre
-        // console.log(Object.keys(country).length);
-        // console.log(Object.keys(edm_dance).length);
-        // console.log(Object.keys(hiphop).length);
-        // console.log(Object.keys(holidays).length);
-        // console.log(Object.keys(jazz).length);
-        // console.log(Object.keys(metal).length);
-        // console.log(Object.keys(pop).length);
-        // console.log(Object.keys(rnb).length);
-        // console.log(Object.keys(rock).length);
+        console.log("Country songs:", Object.keys(country).length);
+        console.log("EDM songs:", Object.keys(edm_dance).length);
+        console.log("Hip-Hop songs:", Object.keys(hiphop).length);
+        console.log("Holiday songs:", Object.keys(holidays).length);
+        console.log("Jazz songs:", Object.keys(jazz).length);
+        console.log("Metal songs:", Object.keys(metal).length);
+        console.log("Pop songs:", Object.keys(pop).length);
+        console.log("RnB songs:", Object.keys(rnb).length);
+        console.log("Rock songs:", Object.keys(rock).length);
 
         // shuffle later to randomize for training purposes
         const country_df = preprocess(country);
@@ -118,23 +118,39 @@ describe('song-classifier', function() {
         const rock_df = preprocess(rock);
 
         const data = concat([country_df, edm_dance_df, hiphop_df, holidays_df, jazz_df, metal_df, pop_df, rnb_df, rock_df]);
+        console.log("Total songs:", data.length);
+
         const { X_Train, X_Test, Y_Train, Y_Test } = trainTestSplit(data);
+        const { encodedData: Y_Train_Encoded, encodings } = labelEncoder(Y_Train);
 
-        const Y_Train_Encoded = labelEncoder(Y_Train);
-        const Y_Test_Encoded = labelEncoder(Y_Test);
-
-        // tf.layers.lstm({ units: 18, inputShape: [611, 12] });
+        // tf.layers.lstm({ units: 18, inputShape: [null, 12] });
         // tf.layers.lstm({ units: 18 });
         // tf.layers.dense({ units: 18, inputShape: [12], activation: 'relu' });
         // tf.layers.dense({ units: 9, activation: 'softmax' });
 
-        const layers = [tf.layers.dense({ units: 18, inputShape: [12], activation: 'relu' }), tf.layers.dense({ units: 9, activation: 'softmax' })];
+        // Build model
+        const layers = [tf.layers.dense({ units: 18, inputShape: [12], activation: 'relu' }),
+                        tf.layers.dense({ units: 9, activation: 'softmax' })];
+
         classifier.addLayers(layers);
         classifier.compile('adam', 'sparseCategoricalCrossentropy', 'accuracy');
-        classifier.fit(X_Train, Y_Train_Encoded).then( () => {
-            const prediction = classifier.predict(X_Test);
-            const allPredictions =  prediction.arraySync().map( row => Math.max.apply(Math, row) );
-            // console.log(prediction.arraySync().indexOf(Math.max(...prediction.arraySync())));
+        classifier.fit(X_Train, Y_Train_Encoded, { epochs: 50 }).then( () => {
+            // Assign genre label to predictions
+            const predictions = classifier.predict(X_Test).arraySync();
+            const predictedGenres = [];
+
+            predictions.forEach( prediction => {
+                const genreProbability = Math.max(...prediction); // Find highest probability for genre
+                predictedGenres.push(prediction.indexOf(genreProbability));
+            });
+
+            // Compare predications to actual
+            for(let i = 0; i < Y_Test.length; i++) {
+                const actual = Y_Test.iloc(i).to_json({ orient: 'values' });
+                const pred = Object.keys(encodings).find( key => encodings[key] === predictedGenres[i] );
+                console.log(`Prediction: ${pred}\t Actual: ${actual}` );
+            }
+
             done();
         }).catch( err => {
             done(err);

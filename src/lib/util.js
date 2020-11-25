@@ -35,7 +35,10 @@ export function labelEncoder(df) {
         encodedData.push({ genre: encodings[label] });
     });
 
-    return new DataFrame(encodedData);
+    return {
+        encodedData: new DataFrame(encodedData),
+        encodings: encodings
+    }
 }
 
 /**
