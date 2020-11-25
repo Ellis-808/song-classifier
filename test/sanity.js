@@ -6,6 +6,7 @@ import {
     JsonToDataFrame,
     labelEncoder,
     preprocess,
+    shuffleDataFrame,
     trainTestSplit
 } from '../src/lib/util';
 
@@ -117,24 +118,40 @@ describe('song-classifier', function() {
         const rnb_df = JsonToDataFrame(rnb);
         const rock_df = JsonToDataFrame(rock);
 
-        const data = preprocess([country_df, edm_dance_df, hiphop_df, holidays_df, jazz_df, metal_df, pop_df, rnb_df, rock_df])
+        // const data = preprocess([country_df, edm_dance_df, hiphop_df, holidays_df, jazz_df, metal_df, pop_df, rnb_df, rock_df]);
+        const data = shuffleDataFrame( preprocess([country_df, edm_dance_df, hiphop_df, holidays_df, jazz_df, metal_df, pop_df, rnb_df, rock_df]) );
         console.log("Total songs after evening out songs per genre:", data.length);
 
-        const { X_Train, X_Test, Y_Train, Y_Test } = trainTestSplit(data);
-        const { encodedData: Y_Train_Encoded, encodings } = labelEncoder(Y_Train);
+        const { X_Train, X_Test, Y_Train, Y_Test } = trainTestSplit(data, 153);
+        const Y_Train_Encoded = labelEncoder(Y_Train);
+        const Y_Test_Encoded = labelEncoder(Y_Test);
+        const encodings = labelEncoder.encodings;
 
         // tf.layers.lstm({ units: 18, inputShape: [null, 12] });
         // tf.layers.lstm({ units: 18 });
         // tf.layers.dense({ units: 18, inputShape: [12], activation: 'relu' });
         // tf.layers.dense({ units: 9, activation: 'softmax' });
+        // tf.layers.dense({ units: 40, inputShape: [12], activation: 'sigmoid' })
+        // tf.layers.leakyReLU({ units: 40, inputShape: [12] })
+        // tf.layers.gaussianDropout({ rate: 0.5 }),
 
         // Build model
-        const layers = [tf.layers.dense({ units: 18, inputShape: [12], activation: 'relu' }),
+        const layers = [tf.layers.dense({ units: 17, inputShape: [12], activation: 'softsign' }),
+                        tf.layers.dense({ units: 15, activation: 'tanh' }),
+                        tf.layers.dense({ units: 13, activation: 'selu' }),
+                        tf.layers.dense({ units: 11, activation: 'softsign' }),
                         tf.layers.dense({ units: 9, activation: 'softmax' })];
 
         classifier.addLayers(layers);
         classifier.compile('adam', 'sparseCategoricalCrossentropy', 'accuracy');
-        classifier.fit(X_Train, Y_Train_Encoded, { epochs: 50 }).then( () => {
+        classifier.fit(X_Train, Y_Train_Encoded, { epochs: 550 }).then( () => {
+            // Print metrics
+            const X_Test_Tensor = tf.tensor(X_Test.to_json({ orient: 'values' }));
+            const Y_Test_Tensor = tf.tensor(Y_Test_Encoded.to_json({ orient: 'values' }).flat());
+            const metrics = classifier.model.evaluate(X_Test_Tensor, Y_Test_Tensor);
+            console.log("Loss:", metrics[0].arraySync().toFixed(2));
+            console.log("Accuracy:", (metrics[1].arraySync() * 100).toFixed(2), "%");
+
             // Assign genre label to predictions
             const predictions = classifier.predict(X_Test).arraySync();
             const predictedGenres = [];
@@ -144,7 +161,7 @@ describe('song-classifier', function() {
                 predictedGenres.push(prediction.indexOf(genreProbability));
             });
 
-            // Compare predications to actual
+            console.log("\nTesting Set Results\n===================");
             for(let i = 0; i < Y_Test.length; i++) {
                 const actual = Y_Test.iloc(i).to_json({ orient: 'values' });
                 const pred = Object.keys(encodings).find( key => encodings[key] === predictedGenres[i] );
