@@ -41,33 +41,35 @@ export function JsonToDataFrame(songData) {
  * @returns {DataFrame} Encoded labels
  */
 export function labelEncoder(df) {
+    if(! (df instanceof DataFrame))
+        throw new Error("parameter `df` must be an instance of a Pandas DataFrame");
+
     const data = df.to_json({ orient: 'values' }).flat();
     const labels = [];
-    const encodings = {};
     const encodedData = [];
 
-    data.forEach( label => {
-        if(! labels.includes(label))
-            labels.push(label);
-    });
-
-    for(let i = 0; i < labels.length; i++) {
-        encodings[labels[i]] = i;
+    if(typeof labelEncoder.encodings === 'undefined') {
+        labelEncoder.encodings = {};
+        data.forEach( label => {
+            if(! labels.includes(label))
+                labels.push(label);
+        });
+    
+        for(let i = 0; i < labels.length; i++) {
+            labelEncoder.encodings[labels[i]] = i;
+        }
     }
 
     data.forEach( label => {
-        encodedData.push({ genre: encodings[label] });
+        encodedData.push({ genre: labelEncoder.encodings[label] });
     });
 
-    return {
-        encodedData: new DataFrame(encodedData),
-        encodings: encodings
-    }
+    return new DataFrame(encodedData);
 }
 
 /**
  * Process song data in preparation for model fitting
- * @param {DataFrame} dfs Song data to process
+ * @param {Array<DataFrame>} dfs Song data to process
  * @returns {DataFrame} Processed song data
  */
 export function preprocess(dfs) {
@@ -85,7 +87,30 @@ export function preprocess(dfs) {
             data.push(df);
     });
 
-    return concat(data);
+    return concat(data).reset_index({ drop: true });
+}
+
+export function shuffleDataFrame(df) {
+    if(! (df instanceof DataFrame))
+        throw new Error("parameter `df` must be an instance of a Pandas DataFrame");
+
+    const songCount = df.length;
+
+    // Generate random indexes to use as training set
+    const numbers = [];
+    while(numbers.length != songCount) {
+        const number = randomInt(songCount);
+        if(numbers.includes(number))
+            continue;
+        numbers.push(number);
+    }
+
+    const shuffled = []
+    numbers.forEach( i => {
+        shuffled.push(df.iloc(i));
+    });
+
+    return concat(shuffled).reset_index({ drop: true });
 }
 
 /**
@@ -116,7 +141,7 @@ export function trainTestSplit(df, testSize = 0) {
         throw new Error("testSize must not exceed the provided DataFrame's index count");
 
     // Generate random indexes to use as training set
-    let numbers = [];
+    const numbers = [];
     while(numbers.length != testSize) {
         const number = randomInt(songCount);
         if(numbers.includes(number))
