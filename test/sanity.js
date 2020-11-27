@@ -45,7 +45,7 @@ describe('song-classifier', function() {
     // Disabled optional test to collect a series of genres in one go
     // NOTE-> Long execution time. (30 second sleep() per genre)
     // NOTE-> DO NOT USE. Fails to retrieve half the data
-    xit('get_top_100_spotify_batch', (done) => {
+    it('get_top_100_spotify_batch', (done) => {
         const genres = ['country', 'edm_dance', 'hiphop', 'holidays', 'jazz', 'metal',
                         'pop', 'rnb', 'rock'];
         let promises = [];
@@ -60,6 +60,10 @@ describe('song-classifier', function() {
             }) );
             delay += 30;
         });
+
+        if (! fs.existsSync('./data/')) {
+            fs.mkdirSync('./data/');
+        }
 
         Promise.all(promises).then( results => {
             let i = 0;
@@ -122,7 +126,7 @@ describe('song-classifier', function() {
         const data = shuffleDataFrame( preprocess([country_df, edm_dance_df, hiphop_df, holidays_df, jazz_df, metal_df, pop_df, rnb_df, rock_df]) );
         console.log("Total songs after evening out songs per genre:", data.length);
 
-        const { X_Train, X_Test, Y_Train, Y_Test } = trainTestSplit(data, 153);
+        const { X_Train, X_Test, Y_Train, Y_Test } = trainTestSplit(data);
         const Y_Train_Encoded = labelEncoder(Y_Train);
         const Y_Test_Encoded = labelEncoder(Y_Test);
         const encodings = labelEncoder.encodings;
@@ -144,7 +148,9 @@ describe('song-classifier', function() {
 
         classifier.addLayers(layers);
         classifier.compile('adam', 'sparseCategoricalCrossentropy', 'accuracy');
-        classifier.fit(X_Train, Y_Train_Encoded, { epochs: 550 }).then( () => {
+        classifier.fit(X_Train, Y_Train_Encoded, { epochs: 1000, batchSize: 64 }).then( history => {
+            // fs.writeFileSync('./data/history.txt', JSON.stringify(history, null, 4));
+            // console.log(Math.max(...history.history.acc), history.history.acc.indexOf(Math.max(...history.history.acc)));
             // Print metrics
             const X_Test_Tensor = tf.tensor(X_Test.to_json({ orient: 'values' }));
             const Y_Test_Tensor = tf.tensor(Y_Test_Encoded.to_json({ orient: 'values' }).flat());
