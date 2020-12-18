@@ -20,7 +20,7 @@ describe('song-classifier', function() {
     this.timeout(600000);
 
     before( done => {
-        spotify.authorize('f7cbeaaf92314828ac13affb1ddcd928', 'c77be55828cc401e89645a659d8141ca').then( () => {
+        spotify.authorize({clisntID}, {clientSecret}).then( () => {
             console.log("Spotify API Token:", spotify.accessToken);
             done();
         }).catch( err => {
